@@ -1,0 +1,19 @@
+[package]
+name = "sqlx-postgres-tester"
+version = "0.1.0"
+authors = ["lshoo <lshoo36@gmail.com>"]
+edition = "2021"
+license = "MIT"
+documentation = "https://docs.rs/"
+repository = "https://github.com/lshoo/"
+homepage = "https://github.com/lshoo/sqlx-postgres-tester"
+description = "A simple tool to test postgres with sqlx and tokio. It will automatically create a database and drop it after test."
+
+readme = "README.md"
+categories = ["development-tools"]
+keywords = ["sqlx", "postgres", "database", "test", "rust"]
+
+[dependencies]
+sqlx = { version = "0.6.2", features = ["postgres", "runtime-tokio-rustls"] }
+tokio = { version = "1.23.0", features = ["rt", "macros", "rt-multi-thread"] }
+uuid = { version = "1.2.2", features = ["v4"] }
