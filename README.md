@@ -14,7 +14,7 @@ Finally, when `TestDb` gets dropped, it will automatically drop the database.
 ```rust
 #[tokio::test]
 async fn test_db_should_work() {
-    let tdb = TestDb::new("localhost", 5432, "postgres", "postgres", "./migrations");
+    let tdb = TestPg::default();
     let pool = tdb.get_pool().await;
     // do something with pool
 }
