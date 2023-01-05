@@ -4,35 +4,29 @@ use sqlx::{migrate::Migrator, Connection, Executor, PgConnection, PgPool};
 use tokio::runtime::Runtime;
 use uuid::Uuid;
 
-pub struct TestDb {
-    host: String,
-    port: u16,
-    user: String,
-    password: String,
-    dbname: String,
+pub struct TestPg {
+    server_url: String,
+    pub dbname: String,
 }
 
-impl TestDb {
-    pub fn new(
-        host: impl Into<String>,
-        port: u16,
-        user: impl Into<String>,
-        password: impl Into<String>,
-        migration_path: impl Into<String>,
-    ) -> Self {
-        let host = host.into();
-        let user = user.into();
-        let password = password.into();
+impl Default for TestPg {
+    fn default() -> Self {
+        let server_url = "postgres://postgres:postgres@localhost:5432";
+        let migration_path = "./migrations";
+
+        Self::new(server_url, migration_path)
+    }
+}
+
+impl TestPg {
+    pub fn new(server_url: impl Into<String>, migration_path: impl Into<String>) -> Self {
+        let server_url = server_url.into();
         let uuid = Uuid::new_v4();
         let dbname = format!("test_{}", uuid);
-        let dbname_cloned = dbname.clone();
 
         let tdb = Self {
-            host,
-            port,
-            user,
-            password,
-            dbname,
+            server_url,
+            dbname: dbname.clone(),
         };
 
         let server_url = tdb.server_url();
@@ -45,7 +39,7 @@ impl TestDb {
             rt.block_on(async move {
                 // use server url to create database
                 let mut conn = PgConnection::connect(&server_url).await.unwrap();
-                conn.execute(format!(r#"CREATE DATABASE "{}""#, dbname_cloned).as_str())
+                conn.execute(format!(r#"CREATE DATABASE "{}""#, dbname).as_str())
                     .await
                     .expect("Error while create database");
 
@@ -65,14 +59,7 @@ impl TestDb {
     }
 
     pub fn server_url(&self) -> String {
-        if self.password.is_empty() {
-            format!("postgres://{}@{}:{}", self.user, self.host, self.port,)
-        } else {
-            format!(
-                "postgres://{}:{}@{}:{}",
-                self.user, self.password, self.host, self.port,
-            )
-        }
+        self.server_url.clone()
     }
 
     pub async fn get_pool(&self) -> PgPool {
@@ -84,7 +71,7 @@ impl TestDb {
     }
 }
 
-impl Drop for TestDb {
+impl Drop for TestPg {
     fn drop(&mut self) {
         let server_url = self.server_url();
         let dbname = self.dbname.clone();
@@ -116,7 +103,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_db_create_and_drop_should_work() {
-        let tdb = TestDb::new("localhost", 5432, "postgres", "postgres", "./migrations");
+        let tdb = TestPg::default();
         let pool = tdb.get_pool().await;
 
         sqlx::query("INSERT INTO todos (title) VALUES('todo1')")
