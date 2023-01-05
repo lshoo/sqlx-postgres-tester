@@ -36,25 +36,21 @@ impl TestDb {
         };
 
         let server_url = tdb.server_url();
-        let server_url_cloned = server_url.clone();
         let url = tdb.url();
         let migration_path = migration_path.into();
-        let migration_path_cloned = migration_path.clone();
 
         // create database dbname
         thread::spawn(move || {
             let rt = Runtime::new().unwrap();
             rt.block_on(async move {
                 // use server url to create database
-                let mut conn = PgConnection::connect(&server_url_cloned).await.unwrap();
+                let mut conn = PgConnection::connect(&server_url).await.unwrap();
                 conn.execute(format!(r#"CREATE DATABASE "{}""#, dbname_cloned).as_str())
                     .await
                     .expect("Error while create database");
 
                 let mut conn = PgConnection::connect(&url).await.unwrap();
-                let m = Migrator::new(Path::new(&migration_path_cloned))
-                    .await
-                    .unwrap();
+                let m = Migrator::new(Path::new(&migration_path)).await.unwrap();
                 m.run(&mut conn).await.unwrap();
             });
         })
