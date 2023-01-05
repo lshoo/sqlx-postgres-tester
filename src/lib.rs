@@ -28,7 +28,11 @@ impl TestDb {
         let dbname_cloned = dbname.clone();
 
         let tdb = Self {
-            host, port, user, password, dbname
+            host,
+            port,
+            user,
+            password,
+            dbname,
         };
 
         let server_url = tdb.server_url();
@@ -110,7 +114,6 @@ impl Drop for TestDb {
     }
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -129,7 +132,7 @@ mod tests {
             .fetch_one(&pool)
             .await
             .unwrap();
-        
+
         assert_eq!(id, 1);
         assert_eq!(title, "todo1");
     }
